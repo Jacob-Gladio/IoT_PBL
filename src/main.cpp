@@ -2,6 +2,7 @@
 
 // put function declarations here:
 int myFunction(int, int);
+//Get ready
 
 void setup() {
   // put your setup code here, to run once:
