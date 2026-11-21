@@ -10,9 +10,8 @@
 #define RFID_RST 17
 
 // define LED pins
-#define LED_RED 
-#define LED_GREEN 
-#define LED_BLUE 
+#define LED_RED ?
+#define LED_GREEN ?
 
 // The time variable is used to store the time when the last RFID card was read
 unsigned long indicatorStart = 0; // the time the program started
@@ -35,17 +34,26 @@ MFRC522 rfid(RFID_SS, RFID_RST); // remember rfid is the object name we're calli
 // FUNCTIONS -----------------------------------------------------------------------------------------------------------------------------
 String getUID() {
   String uid = ""; // create a string to store the UID
-  for (byte i = 0; i < rfid.uid.size; i++) { // loop through the UID bytes
+  for (byte i = 0; i < rfid.uid.size; i++) { // loop through the UID bytes (normally 4 according to Lab 9)
     if(rfid.uid.uidByte[i] < 0x10) {
-
+      uid += "0"; // add a leading zero for single-digit hex values --> 1 = 01, 2 = 02, etc
     }
+    uid = uid + String(rfid.uid.uiByte[i], HEX); // Turns the byte into hex text
+    if (i < rfid.uid.size - 1) { // Add a space after each byte except the last
+      uid = uid + " "; 
+    }
+  }
+  uid.toUpperCase(); // convert the string to uppercase
+  return uid; // return the UID string
 }
 
-
-
-bool isAuthorized(String uid) {
-  for (int i = 0; i < numAuthorized)
-
+bool isAuthorized(String uid) { // receives the card text, and returns with true or false if it respects the parameters
+  for (int i = 0; i < numAuthorized; i++) {
+    if (uid == authorizedUIDs[i]) {
+      return true; // UID is authorized 
+    }
+  }
+  return false; // UID is not authorized
 }
 
 void startIndicatorTimer(unsigned long duration) {
@@ -54,20 +62,95 @@ void startIndicatorTimer(unsigned long duration) {
   indicatorOn = true; // set the indicator to on
 }
 
+void redOFF() {
+  digitalWrite(LED_RED, LOW);
+}
+
+void onAccessGranted(){
+  Serial.println("Access granted");
+  indicatorOn = false;
+  redOFF();
+
+  roomOccupied = !roomOccupied; // toggle the state of the room
+
+  if(roomOccupied == true){
+    digitalWrite(LED_GREEN, HIGH);
+    Serial.println("Room: OCCUPIED");
+  } else{
+    digitalWrite(LED_GREEN, LOW);
+    Serial.println("Room: FREE");
+  }
+}
+
+void onAccessDenied(){
+  Serial.println("Access denied");
+  startIndicatorTimer(1000); // start the timer for 1 second
+}
+
+void onTimerExpired(){
+  redOFF();
+  indicatorOn = false;
+  Serial.println( "READY");
+}
+
+void onCardScanned(String uid){
 
 
 
 
+  if(uid == lastUID && millis() - lastScanTime < 2000) { // if the same card is scanned within 2 seconds, ignore it
+    Serial.println("Card already scanned, please wait...");
+    return;
+  }
+  lastUID = uid; // update the last scanned UID
+  lastScanTime = millis(); // update the last scan time
 
+  Serial.print("Card UID: ");
+  Serial.println(uid);
+
+  if(isAuthorized(uid) == true){
+    onAccessGranted();
+  }
+  else{
+    onAccessDenied();
+  }
+}
 void setup() {
+  pinMode(LED_RED, OUTPUT); // set the LED pins as output
+  pinMode(LED_GREEN, OUTPUT);
+  
+  digitalWrite(LED_RED, LOW); // turn off the LEDs starting state
+  digitalWrite(LED_GREEN, LOW);
+
   Serial.begin(115200); // start the serial communication
   SPI.begin(); // start the SPI bus
   rfid.PCD_Init(); // initialize the RFID reader
 
   Serial.println("tap a card...");
-
+  Serial.println(" Room: FREE");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  if (rfid.PICC_IsNewCardPresent() == true && rfid.PICC_ReadCardSerial() == true) { //asking the reader if there is a new card present --> returns either true or false
+    String uid = getUID(); // get the UID of the card
+    Serial.print("Card UID: ");
+    Serial.println(uid);
+    rfid.PICC_HaltA(); //puts the reader into sleep mode so it isn't constantly reading
+    rfid.PCD_StopCrypto1();  
+  }
+
+   // Timer
+  if (indicatorOn == true){
+    unsigned long elapsed = millis() - indicatorStart;
+
+    if (elapsed >= indicatorTime){
+      onTimerExpired();
+    }
+    else if ((elapsed / 200) % 2 == 0){
+      digitalWrite(LED_RED, HIGH);
+    }
+    else{
+      digitalWrite(LED_RED, LOW);
+    }
+  }
 }
