@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <SD.h>
 
 // GLOBAL VARIABLES --------------------------------------------------------------------------------------------------------------
 
@@ -12,6 +13,10 @@
 // define LED pins
 #define LED_RED ?
 #define LED_GREEN ?
+
+//define the pin for the SD card reader
+#define SDchipSelect 2
+File dataFile; // create a file object to hold the data
 
 // The time variable is used to store the time when the last RFID card was read
 unsigned long indicatorStart = 0; // the time the program started
@@ -76,9 +81,19 @@ void onAccessGranted(){
   if(roomOccupied == true){
     digitalWrite(LED_GREEN, HIGH);
     Serial.println("Room: OCCUPIED");
+    dataFile = SD.open("/checkins.csv", FILE_APPEND); // makes that the data is added one after the other line by line
+    dataFile.print(millis() / 1000); // tells the time in seconds since the program started
+    dataFile.print(","); //tells the code to go to the next column
+    dataFile.println("Check-in");
+    dataFile.close(); // saves
   } else{
     digitalWrite(LED_GREEN, LOW);
     Serial.println("Room: FREE");
+    dataFile = SD.open("/checkins.csv", FILE_APPEND);
+    dataFile.print(millis() / 1000);
+    dataFile.print(",");
+    dataFile.println("Check-out");
+    dataFile.close(); // saves
   }
 }
 
@@ -115,6 +130,8 @@ void onCardScanned(String uid){
     onAccessDenied();
   }
 }
+
+
 void setup() {
   pinMode(LED_RED, OUTPUT); // set the LED pins as output
   pinMode(LED_GREEN, OUTPUT);
@@ -126,8 +143,22 @@ void setup() {
   SPI.begin(); // start the SPI bus
   rfid.PCD_Init(); // initialize the RFID reader
 
+  Serial.println("Initializing SD card...");
+  if (SD.begin(chipSelect)){
+    Serial.println("SD card Found");
+  } else {
+    Serial.println("SD card not found");
+  }
+
+  dataFile = SD.open("/checkins.csv", FILE_WRITE); // This creates the file in esp32's format
+  dataFile.println("Time,Event"); // write the header to the file
+  dataFile.close(); // close the file to save the changes
+  
+
   Serial.println("tap a card...");
   Serial.println(" Room: FREE");
+
+
 }
 
 void loop() {
