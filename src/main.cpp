@@ -13,38 +13,41 @@ Adafruit_BMP280 bmp;            // Temperature Pins
 // Global Variables
 float temp[NUM_READINGS];                 // Initialize Temperature Array
 const int NUM_READINGS = 10;
-float averageTemp;              // Variable Containing Average Temperature from temp[10]
+
 
 // Functions
-float getAverage() {            //Temperature Average
+// TEMPERATURE
+float getAverage() {
     long sum = 0;
     for (int t = 0; t < NUM_READINGS; t++) 
     {
-        sum = sum + t;
+        sum = sum + temp[t];
     }
     return (float)sum / NUM_READINGS;
 }
+
 
 void setup() {
 // Initialize Components
     Serial.begin(115200);                   // Initialize Serial Monitor
     Wire.begin();                           // Initialize I2C
-    Serial.println("I2C Started");
-
-    if(!bmp.begin(0x76))                    // Check for BMP
-    { 
-    Serial.println("BME280 Not Found"); 
-    while(true); 
-    }
-    Serial.println("BME280 Found"); 
+    // Check for BMP
+    //if(!bmp.begin(0x76))
+    //{ 
+    //Serial.println("BMP280 Not Found"); 
+    //while(true); 
+    //}
+    //Serial.println("BMP280 Found"); 
 
 }
 
 void loop() {
 // TEMPERATURE
-    for (int t = 0; t < 10; t++)
+    // Store Last 10 Temperature Readings
+    for (int t = 0; t < NUM_READINGS; t++)
     {
-        temp[t] = bmp.readTemperature();    // Store Last 10 Temperature Readings
+        temp[t] = bmp.readTemperature();
     }
-
+    // Get Average of Last 10 Temperature Readings
+    float averageTemp = getAverage();
 }
