@@ -3,6 +3,11 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <SD.h>
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+#include <WiFi.h>
+#include <ArduinoJson.h>
 
 // GLOBAL VARIABLES --------------------------------------------------------------------------------------------------------------
 
@@ -35,6 +40,17 @@ bool roomOccupied = false; // the state of the room if it is occupied or not
 
 // creating the object from the library to act as the reader
 MFRC522 rfid(RFID_SS, RFID_RST); // remember rfid is the object name we're calling back
+
+// WiFi AP
+const char* ssid = "Eyanat_Jacob_PBL";
+const char* password = "6767sigma";
+ 
+// WebPage
+WebServer server(80); // creates the webserver that can be accessed through the IP
+ 
+// BMP280 sensor
+Adafruit_BMP280 bmp;
+ 
 
 // FUNCTIONS -----------------------------------------------------------------------------------------------------------------------------
 String getUID() {
