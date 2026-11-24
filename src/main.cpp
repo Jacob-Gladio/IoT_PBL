@@ -3,12 +3,6 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <SD.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BMP280.h>
-#include <WiFi.h>
-#include <WebServer.h>
-
 
 // GLOBAL VARIABLES --------------------------------------------------------------------------------------------------------------
 
@@ -21,8 +15,8 @@
 #define RFID_RST 17
 
 // define LED pins
-#define LED_RED 35
-#define LED_GREEN 32
+#define LED_RED ?
+#define LED_GREEN ?
 
 //define the pin for the SD card reader
 #define SDchipSelect 2
@@ -45,6 +39,17 @@ bool roomOccupied = false; // the state of the room if it is occupied or not
 
 // creating the object from the library to act as the reader
 MFRC522 rfid(RFID_SS, RFID_RST); // remember rfid is the object name we're calling back
+
+
+// WiFi AP
+const char* ssid = "Eyanat_Jacob_PBL";
+const char* password = "6767sigma";
+
+// WebPage
+WebServer server(80); // creates the webserver that can be accessed through the IP
+
+// BMP280 sensor
+Adafruit_BMP280 bmp;
 
 // WiFi AP
 const char* ssid = "Eyanat_Jacob_PBL";
@@ -101,7 +106,7 @@ void onAccessGranted(){
 
   roomOccupied = !roomOccupied; // toggle the state of the room
 
-  if(roomOccupied == true && digitalRead(BUTTON_PIN) == HIGH){ // if the room is occupied and the button is not pressed, it will check in the user
+  if(roomOccupied == true && buttonPressed == false){ // if the room is occupied and the button is not pressed, it will check in the user
     digitalWrite(LED_GREEN, HIGH);
     Serial.println("Room: OCCUPIED");
     dataFile = SD.open("/checkins.csv", FILE_APPEND); // makes that the data is added one after the other line by line
@@ -109,15 +114,15 @@ void onAccessGranted(){
     dataFile.print(","); //tells the code to go to the next column
     dataFile.println("Check-in");
     dataFile.close(); // saves
-  } else if(roomOccupied == true && digitalRead(BUTTON_PIN) == LOW){ // if the room is free and the button is not pressed, it will check out the user
-    digitalWrite(LED_GREEN, LOW);
-    Serial.println("Room: FREE, HELP REQUESTED");
+  } else if(roomOccupied == true && buttonPressed == true){ // if the room is occupied and the button is pressed, it will check out the user
+    digitalWrite(LED_GREEN, HIGH);
+    Serial.println("Room: FREE, HELP NEEDED");
     dataFile = SD.open("/checkins.csv", FILE_APPEND);
     dataFile.print(millis() / 1000);
     dataFile.print(",");
     dataFile.println("Check-in");
-    dataFile.close(); // saves
-  } else {
+    dataFile.close(); // saves 
+  }else{
     digitalWrite(LED_GREEN, LOW);
     Serial.println("Room: FREE");
     dataFile = SD.open("/checkins.csv", FILE_APPEND);
@@ -183,7 +188,7 @@ void setup() {
   }
 
   dataFile = SD.open("/checkins.csv", FILE_WRITE); // This creates the file in esp32's format
-  dataFile.println("Time,Room,Request"); // write the header to the file
+  dataFile.println("Time,Event"); // write the header to the file
   dataFile.close(); // close the file to save the changes
   
 
