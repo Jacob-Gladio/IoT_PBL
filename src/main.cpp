@@ -11,8 +11,8 @@
 Adafruit_BMP280 bmp;            // Temperature Pins
 
 // Global Variables
-float temp[NUM_READINGS];                 // Initialize Temperature Array
 const int NUM_READINGS = 10;
+float temp[NUM_READINGS];                 // Initialize Temperature Array
 
 
 // Functions
@@ -50,4 +50,6 @@ void loop() {
     }
     // Get Average of Last 10 Temperature Readings
     float averageTemp = getAverage();
+
+// OLED
 }
