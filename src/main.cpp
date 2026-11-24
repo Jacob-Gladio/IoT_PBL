@@ -8,26 +8,30 @@
 #include <SPI.h>                // SPI Library
 
 // Pins
-
+Adafruit_BMP280 bmp;            // Temperature Pins
 
 // Global Variables
-Adafruit_BMP280 bmp;            // Temp variable
-float temperature;
+float temp[NUM_READINGS];                 // Initialize Temperature Array
+const int NUM_READINGS = 10;
+float averageTemp;              // Variable Containing Average Temperature from temp[10]
 
+// Functions
+float getAverage() {            //Temperature Average
+    long sum = 0;
+    for (int t = 0; t < NUM_READINGS; t++) 
+    {
+        sum = sum + t;
+    }
+    return (float)sum / NUM_READINGS;
+}
 
-// Initialize Temp Array
-float Temp[10] = {0};
-
-
-// 
-
-void setup(){
-    //Initialize Components
-    Serial.begin(115200);       // Initialize Serial Monitor
-    Wire.begin();               // Initialize I2C
+void setup() {
+// Initialize Components
+    Serial.begin(115200);                   // Initialize Serial Monitor
+    Wire.begin();                           // Initialize I2C
     Serial.println("I2C Started");
 
-    if(!bmp.begin(0x76))        // Check for BMP
+    if(!bmp.begin(0x76))                    // Check for BMP
     { 
     Serial.println("BME280 Not Found"); 
     while(true); 
@@ -36,17 +40,11 @@ void setup(){
 
 }
 
-void loop(){
-    // Last 10 Temperature Readings
-    //for (int t = 0; t < 10; t++)
-    //{
-        //digitalRead();
-    //}
+void loop() {
+// TEMPERATURE
+    for (int t = 0; t < 10; t++)
+    {
+        temp[t] = bmp.readTemperature();    // Store Last 10 Temperature Readings
+    }
 
-    // Temp Test
-    temperature = bmp;
-    Serial.print("Temperature: "); 
-    Serial.print(temperature); 
-    Serial.println(" C"); 
-    delay(1000); 
 }
