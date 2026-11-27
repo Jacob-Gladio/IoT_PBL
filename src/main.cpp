@@ -199,12 +199,11 @@ void setup() {
 }
 
 void loop() {
-  if (rfid.PICC_IsNewCardPresent() == true && rfid.PICC_ReadCardSerial() == true) { //asking the reader if there is a new card present --> returns either true or false
-    String uid = getUID(); // get the UID of the card
-    Serial.print("Card UID: ");
-    Serial.println(uid);
-    rfid.PICC_HaltA(); //puts the reader into sleep mode so it isn't constantly reading
-    rfid.PCD_StopCrypto1();  
+  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
+    String uid = getUID();
+    onCardScanned(uid);
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
   }
 
    // Timer
