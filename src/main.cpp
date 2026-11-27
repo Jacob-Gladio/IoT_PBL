@@ -36,8 +36,8 @@ Adafruit_SSD1306 display(       // OLED Object
 
     // POTENTIOMETER
 #define POT_PIN 34
-
-
+    // HELP BUTTON
+volatile const int HELP_BUTTON = 25;
 
 // Functions
     // TEMPERATURE
@@ -57,7 +57,7 @@ float getAverage() {
     return (float)sum / NUM_READINGS;
 }
 
-    // POTENTIOMETER THRESHHOLD
+    // POTENTIOMETER THRESHOLD
 float getTempThresh()
 {
     int potVal = analogRead(POT_PIN);               // Reads Potentiometer Resistance
@@ -69,6 +69,9 @@ float getTempThresh()
 void fanSpeed () {
     
 }
+
+    // HELP BUTTON
+ISR_RAM
 
 
 
