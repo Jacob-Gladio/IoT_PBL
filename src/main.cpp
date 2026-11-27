@@ -3,12 +3,16 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <SD.h>
+<<<<<<< HEAD
+=======
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+#include <WiFi.h>
+#include <ArduinoJson.h>
+>>>>>>> parent of 9d32bf7 (NEWEST VERSION)
 
 // GLOBAL VARIABLES --------------------------------------------------------------------------------------------------------------
-
-//temp pin for button
-#define BUTTON_PIN 25
-
 
 // define the pins for the RFID reader
 #define RFID_SS 5
@@ -32,8 +36,8 @@ String lastUID = ""; // the last UID that was read
 unsigned long lastScanTime = 0; // the time when the last UID was read  
 
 // the authorized UIDS, that will have permission to the room at that time
-String authorizedUIDS[] = {"53 24 0F 56"}; // the authorized UIDs, that will have permission to the room at that time ------- gotta complete
-int numAuthorized = 1; //number of autorized devices ------- gotta complete
+String authorizedUIDS[] = {"", "", ""}; // the authorized UIDs, that will have permission to the room at that time ------- gotta complete
+int numAuthorized = 0; //number of autorized devices ------- gotta complete
 
 bool roomOccupied = false; // the state of the room if it is occupied or not
 
@@ -69,7 +73,7 @@ String getUID() {
     if(rfid.uid.uidByte[i] < 0x10) {
       uid += "0"; // add a leading zero for single-digit hex values --> 1 = 01, 2 = 02, etc
     }
-    uid = uid + String(rfid.uid.uidByte[i], HEX); // Turns the byte into hex text
+    uid = uid + String(rfid.uid.uiByte[i], HEX); // Turns the byte into hex text
     if (i < rfid.uid.size - 1) { // Add a space after each byte except the last
       uid = uid + " "; 
     }
@@ -80,12 +84,10 @@ String getUID() {
 
 bool isAuthorized(String uid) { // receives the card text, and returns with true or false if it respects the parameters
   for (int i = 0; i < numAuthorized; i++) {
-    if (uid == authorizedUIDS[i]) {
-      Serial.println("Authorized user");
+    if (uid == authorizedUIDs[i]) {
       return true; // UID is authorized 
     }
   }
-  Serial.println("Unauthorized user");
   return false; // UID is not authorized
 }
 
@@ -171,7 +173,6 @@ void onCardScanned(String uid){
 void setup() {
   pinMode(LED_RED, OUTPUT); // set the LED pins as output
   pinMode(LED_GREEN, OUTPUT);
-  pinMode(BUTTON_PIN, INPUT_PULLUP); // set the button pin as input with pull-up resistor
   
   digitalWrite(LED_RED, LOW); // turn off the LEDs starting state
   digitalWrite(LED_GREEN, LOW);
@@ -181,7 +182,7 @@ void setup() {
   rfid.PCD_Init(); // initialize the RFID reader
 
   Serial.println("Initializing SD card...");
-  if (SD.begin(SDchipSelect)){
+  if (SD.begin(chipSelect)){
     Serial.println("SD card Found");
   } else {
     Serial.println("SD card not found");
