@@ -1,7 +1,7 @@
 // Libraries
 #include <Arduino.h>
-#include <Adafruit_Sensor.h>    // Temp Sensor Libraries
-#include <Adafruit_BMP280.h>    // Temp Sensor Libraries
+#include <Adafruit_Sensor.h>    // Temp Sensor Library
+#include <Adafruit_BMP280.h>    // Temp Sensor Library
 #include <Adafruit_GFX.h>       // OLED Library
 #include <Adafruit_SSD1306.h>   // OLED Library
 #include <Wire.h>               // I2C Library
@@ -14,7 +14,8 @@ Adafruit_BMP280 bmp;            // Temperature Pins
     // TEMPERATURE
 const int NUM_READINGS = 10;
 float temp[NUM_READINGS];       // Initialize Temperature Array
-unsigned long lastTempTime = 0; // Time of Last Temperature Reading
+    // OLED DISPLAY
+unsigned long lastOLEDTime = 0; // Time of Last OLED Update
 
     //OLED DISPLAY
 #define SCREEN_WIDTH 128
@@ -41,6 +42,13 @@ Adafruit_SSD1306 display(       // OLED Object
 // Functions
     // TEMPERATURE
 float getAverage() {
+    // Store Last 10 Temperature Readings
+    for (int t = 0; t < NUM_READINGS; t++)
+    {
+        temp[t] = bmp.readTemperature();
+        delay(50);
+    }
+    // Get Average Temperautre of Last 10 Temperature Readings
     long sum = 0;
     for (int t = 0; t < NUM_READINGS; t++) 
     {
@@ -53,7 +61,11 @@ float getAverage() {
 void setup() {
 // Initialize Components
     Serial.begin(115200);   // Initialize Serial Monitor
+
+    // TEMPERATURE
     Wire.begin();           // Initialize I2C
+    bmp.begin(0x76);        // Initialize BMP280 Sensor
+
     // OLED DISPLAY
     display.begin(SSD1306_SWITCHCAPVCC);    // Initialize OLED
     display.clearDisplay();                 // Clear Display
@@ -65,25 +77,26 @@ void setup() {
 }
 
 void loop() {
-// TEMPERATURE
-if (millis() - lastTempTime >= 2000)    // Read Temperature Every 2 Seconds
+// OLED DISPLAY
+if (millis() - lastOLEDTime >= 2000)    // Update OLED Display Every 2 Seconds
     {
-    lastTempTime = millis();
-    // Store Last 10 Temperature Readings
-    for (int t = 0; t < NUM_READINGS; t++)
-    {
-        temp[t] = bmp.readTemperature();
-    }
-    // Get Average of Last 10 Temperature Readings
-    float averageTemp = getAverage();
-    // Display Average Temperature on OLED Display
+    lastOLEDTime = millis();
+
+    // TEMPERATURE
+    float averageTemp = getAverage();       // Get Average of Last 10 Temperature Readings
+
+    // Display Average Temperature & Room State on OLED Display
     display.clearDisplay();                 // Clear Display
     display.setCursor(0, 0);                // Set Cursor Position
-    display.print("Average Temp: ");        // Display Text
+    display.print("Temp: ");                // Display Text
     display.print(averageTemp);             // Display Average Temperature
-    display.print(" C");                    // Display Text
-    // display.println(Room State);)
+    display.println(" C");                  // Display Text
+    // display.println(Room State);
     display.display();                      // Update Display
+
+    
+    // TEST
+    Serial.println(bmp.readTemperature());
     }
 }
 
