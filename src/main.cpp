@@ -14,19 +14,16 @@ Adafruit_BMP280 bmp;            // Temperature Pins
     // TEMPERATURE
 const int NUM_READINGS = 10;
 float temp[NUM_READINGS];       // Initialize Temperature Array
+
     // OLED DISPLAY
 unsigned long lastOLEDTime = 0; // Time of Last OLED Update
-
-    //OLED DISPLAY
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-
 #define MOSI 23                 // Global MOSI
 #define CLK 18                  // Global Clock
 #define DC 16
 #define OLED_CS 15              // Chip Select of OLED
 #define RST 4
-
 Adafruit_SSD1306 display(       // OLED Object
 	SCREEN_WIDTH,
 	SCREEN_HEIGHT,
@@ -36,6 +33,9 @@ Adafruit_SSD1306 display(       // OLED Object
 	RST,
 	OLED_CS
 );
+
+    // POTENTIOMETER
+#define POT_PIN 34
 
 
 
@@ -57,6 +57,20 @@ float getAverage() {
     return (float)sum / NUM_READINGS;
 }
 
+    // POTENTIOMETER THRESHHOLD
+float getTempThresh()
+{
+    int potVal = analogRead(POT_PIN);               // Reads Potentiometer Resistance
+    int tempThresh = map(potVal, 0, 4095, 20, 50);  // Fan Will Only Turn On if Temperature > 20
+    return tempThresh;
+}
+
+    // FAN CONTROL
+void fanSpeed () {
+    
+}
+
+
 
 void setup() {
 // Initialize Components
@@ -73,6 +87,11 @@ void setup() {
     display.setTextColor(SSD1306_WHITE);    // Set Text Color
     display.setCursor(0, 0);                // Set Cursor Position
     display.display();                      // Update Display
+
+    // POTENTIOMETER ADC
+    analogReadResolution(12);               // Set Analog 12 Bit Resolution
+    analogSetAttenuation(ADC_11db);         // Measure 0-3.3V Range
+    pinMode(POT_PIN, INPUT);
 
 }
 
@@ -93,11 +112,10 @@ if (millis() - lastOLEDTime >= 2000)    // Update OLED Display Every 2 Seconds
     display.println(" C");                  // Display Text
     // display.println(Room State);
     display.display();                      // Update Display
-
-    
-    // TEST
-    Serial.println(bmp.readTemperature());
     }
+
+// FAN CONTROL
+
 }
 
 
@@ -117,10 +135,12 @@ if (millis() - lastOLEDTime >= 2000)    // Update OLED Display Every 2 Seconds
 
 
 // TESTS
- // Check for BMP
+ // Check for BMP Setup
     //if(!bmp.begin(0x76))
     //{ 
     //Serial.println("BMP280 Not Found"); 
     //while(true); 
     //}
-    //Serial.println("BMP280 Found"); 
+    //Serial.println("BMP280 Found");
+ // Check for temperature readings Loop
+    //Serial.println(bmp.readTemperature());
